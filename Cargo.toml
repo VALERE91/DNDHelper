@@ -1,0 +1,21 @@
+[package]
+name = "dnd_helper_api"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+actix-web = { version = "4" }
+serde = { version = "*", features = ["derive"] }
+serde_json = { version = "*" }
+uuid = { version = "*" , features = ["serde", "v4"] }
+jsonwebtoken = { version = "*" }
+chrono = { version = "*" }
+log = { version = "*" }
+log4rs = { version = "*" }
+dotenv = { version = "*" }
+futures = "0.3"
+
+[dependencies.mongodb]
+version = "*"
