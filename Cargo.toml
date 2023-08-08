@@ -16,6 +16,9 @@ log = { version = "*" }
 log4rs = { version = "*" }
 dotenv = { version = "*" }
 futures = "0.3"
-
-[dependencies.mongodb]
-version = "*"
+mongodb = { version = "*" }
+actix-cors = { version = "*" }
+actix-identity = { version = "*" }
+actix-session = { version = "*", features = ["redis-actor-session"] }
+actix-redis = { version = "*" }
+actix-web-httpauth = { version = "*" }

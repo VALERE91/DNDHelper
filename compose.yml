@@ -1,0 +1,27 @@
+services:
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis:/data
+    command: redis-server --appendonly yes
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongo:/data/db
+  api:
+    build: .
+    ports:
+      - "3000:8080"
+    links:
+      - redis
+      - mongo
+    environment:
+      - SERVER_PORT=3000
+      - SERVER_HOST=localhost
+      - LOG_CONFIG=logconfig.yml
+      - MONGO_URI=mongodb://localhost:27017
+      - REDIS_URI=redis://localhost:6379

@@ -1,9 +1,5 @@
-use std::env;
-extern crate dotenv;
-use dotenv::dotenv;
-
 use mongodb::{
-    bson::extjson::de::Error,
+    bson::{extjson::de::Error, doc},
     results::InsertOneResult,
     Client, Collection,
 };
@@ -14,12 +10,7 @@ pub struct MongoRepo {
 }
 
 impl MongoRepo {
-    pub async fn init() -> Self {
-        dotenv().ok();
-        let uri = match env::var("MONGOURI") {
-            Ok(v) => v.to_string(),
-            Err(_) => format!("Error loading env variable"),
-        };
+    pub async fn init(uri: String) -> Self {
         let client = Client::with_uri_str(uri).await.unwrap();
         let db = client.database("rustDB");
         let col: Collection<User> = db.collection("User");
@@ -40,6 +31,16 @@ impl MongoRepo {
             .await
             .ok()
             .expect("Error creating user");
+        Ok(user)
+    }
+
+    pub async fn get_user(&self, username: String) -> Result<Option<User>, Error> {
+        let user = self
+            .col
+            .find_one(doc! { "username": username }, None)
+            .await
+            .ok()
+            .expect("Error finding user");
         Ok(user)
     }
 }

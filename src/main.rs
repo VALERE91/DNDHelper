@@ -1,28 +1,44 @@
 mod api;
 mod models;
 mod repository;
+mod config;
 
-//modify imports below
-use actix_web::{web::{Data, scope}, App, HttpServer};
+use actix_session::{SessionMiddleware, storage::RedisActorSessionStore};
+use actix_web::{web::{Data, scope}, App, HttpServer, cookie::Key};
+use actix_identity::IdentityMiddleware;
+
 use log::info;
 use repository::mongodb_repos::MongoRepo;
 
+use crate::config::Config;
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    log4rs::init_file("logconfig.yml", Default::default()).expect("Log config file not found.");
+    let config = Config::init();
 
-    info!("Starting server at http://localhost:8080");
+    log4rs::init_file(config.log_config_file, Default::default())
+                .expect("Log config file not found.");
 
-    let db = MongoRepo::init().await;
+    let db = MongoRepo::init(config.db_uri).await;
     let db_data = Data::new(db);
 
+    let secret_key = Key::generate();
+
+    info!("Starting server at http://${0}:${1}", config.host, config.port);
     HttpServer::new(move || {
         App::new()
-            .app_data(db_data.clone())
-            .service(scope("/api")
-                .configure(api::user_api::config_user_routes))
+        .wrap(actix_web::middleware::Logger::default())
+        .wrap(actix_web::middleware::Compress::default())
+        .wrap(IdentityMiddleware::default())
+        .wrap(SessionMiddleware::new(
+            RedisActorSessionStore::new(config.redis_uri.clone()),
+            secret_key.clone()
+       ))
+        .app_data(db_data.clone())
+        .service(scope("/api")
+            .configure(api::user_api::config_user_routes))
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind((config.host, config.port))?
     .run()
     .await
 }
